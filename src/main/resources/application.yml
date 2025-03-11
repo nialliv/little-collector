@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: little-collector
+
+logging:
+  pattern:
+    console: "[%highlight(%level)] - %msg%n"
+  level:
+    ru.artemev.littlecollector.LittleCollectorApplicationKt: WARN
