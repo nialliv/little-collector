@@ -22,12 +22,24 @@ class InterfaceServiceImpl : InterfaceService {
         }
     }
 
+    override fun printShadowSlaveHello() {
+        logger.info { "Получается качаем теневого раба..." }
+    }
+
+    override fun shadowSlaveMenu() {
+        logger.info {
+            "Че делаем?\n" +
+                    "\t1 - Какая последняя глава на сайте?\n" +
+                    "\t2 - Давай качать главы"
+        }
+    }
+
     override fun wrapperInput(): String {
         print("[${GREEN}Input$RESET] -> ")
         return readln()
     }
 
-    override fun printHelpMessage() {
-        TODO("Not yet implemented")
+    override fun wrongAction() {
+        logger.warn { "Ты ввел ересь, давай по новой" }
     }
 }
