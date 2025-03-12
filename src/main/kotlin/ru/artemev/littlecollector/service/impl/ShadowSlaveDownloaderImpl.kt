@@ -16,17 +16,26 @@ class ShadowSlaveDownloaderImpl(
         handleActionCode(interfaceService.wrapperInput())
     }
 
-    override fun getNumberOfLastChapter(): Int {
-        TODO("Not yet implemented")
-    }
+    /*
+        get info and what needed
+        get path to json export file ++ validate
+        get range to save ++ validate
+        --- try
+        download html
+        parse
+        save in doc(?)
+        ---- catch
+        if error save in array
 
+        get status
+    */
     override fun saveRangeChapters() {
-        TODO("Not yet implemented")
+
     }
 
     private fun handleActionCode(wrapperInput: String) {
-        when(wrapperInput) {
-            ShadowSlaveAction.LAST_CHAPTER.actionCode -> getNumberOfLastChapter()
+        when (wrapperInput) {
+//            ShadowSlaveAction.LAST_CHAPTER.actionCode -> getNumberOfLastChapter()
             ShadowSlaveAction.SAVE_CHAPTERS.actionCode -> saveRangeChapters()
             else -> {
                 interfaceService.wrongAction()
@@ -34,7 +43,6 @@ class ShadowSlaveDownloaderImpl(
             }
         }
     }
-
 
 
 }

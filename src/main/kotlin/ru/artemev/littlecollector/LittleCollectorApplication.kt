@@ -21,8 +21,8 @@ class LittleCollectorApplication(
         processByService(interfaceService.wrapperInput())
     }
 
-    private fun processByService(handleResponse: String) {
-        when (handleResponse) {
+    private fun processByService(response: String) {
+        when (response) {
             InterfaceResponseEnum.SHADOW_SLAVE.code -> shadowSlaveDownloader.process()
             InterfaceResponseEnum.EXIT.code -> logger.info { "Это ты идешь нахер и пока..." }
             else -> {

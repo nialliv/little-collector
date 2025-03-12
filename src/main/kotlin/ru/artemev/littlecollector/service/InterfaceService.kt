@@ -2,7 +2,6 @@ package ru.artemev.littlecollector.service
 
 interface InterfaceService {
 
-    // Приветственное сообщение
     fun printHello()
 
     fun printShadowSlaveHello()
