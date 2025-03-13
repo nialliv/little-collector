@@ -66,7 +66,7 @@ class ShadowSlaveDownloaderImpl(
         val targetFolder = getTargetFolder() ?: return
 
         val chapterWithErrors = HashSet<ChapterErrorDto>()
-        requiredChapters.forEach { processChapter(it, chatExport, targetFolder, chapterWithErrors) }
+        requiredChapters.forEach { processChapter(it, chapterMap, targetFolder, chapterWithErrors) }
 
         shadowSlaveInterfaceService.printFinishStatus(chapterWithErrors)
     }
@@ -123,11 +123,14 @@ class ShadowSlaveDownloaderImpl(
 
     private fun processChapter(
         chapterNum: Int,
-        chatExport: ChatExportDto,
+        chapterMap: Map<Int?, List<String?>>,
         targetFolder: String,
         chapterWithErrors: HashSet<ChapterErrorDto>
     ) {
-        logger.info { "Типа гружусь с $chapterNum" }
+        shadowSlaveInterfaceService.printProcessChapter(chapterNum)
+        // always must be one element, but... mb not? =)
+        val href = chapterMap[chapterNum]?.get(0)
+
     }
 
     @OptIn(ExperimentalSerializationApi::class)
@@ -152,7 +155,6 @@ class ShadowSlaveDownloaderImpl(
     private fun getChapter(text: String): String? =
         Regex("^.*?\\s(\\d*).*?\$").find(text)?.groups?.get(1)?.value
 
-    // 1-23 54-34
     private fun convertRangeToSet(chaptersRange: String): Set<Int> {
         return chaptersRange.split("-")
             .let { (it[0].toInt()..it[1].toInt()) }

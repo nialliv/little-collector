@@ -2,12 +2,11 @@ package ru.artemev.littlecollector.service.impl
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
-import ru.artemev.littlecollector.service.InterfaceService
 
 private val logger = KotlinLogging.logger {}
 
-@Service("defaultInterfaceService")
-class InterfaceServiceImpl : InterfaceService {
+@Service("beginInterfaceService")
+class BeginInterfaceServiceImpl : AbstractInterfaceServiceImpl() {
 
     override fun printHello() {
         logger.info { "Привет, чего делать будем?" }

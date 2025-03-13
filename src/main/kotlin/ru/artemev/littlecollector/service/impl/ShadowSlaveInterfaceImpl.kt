@@ -8,7 +8,9 @@ import ru.artemev.littlecollector.service.ShadowSlaveInterfaceService
 private val logger = KotlinLogging.logger {}
 
 @Service
-class ShadowSlaveInterfaceImpl : ShadowSlaveInterfaceService {
+class ShadowSlaveInterfaceImpl
+    : AbstractInterfaceServiceImpl(), ShadowSlaveInterfaceService {
+
     override fun printHello() {
         logger.info { "Получается качаем теневого раба..." }
     }
@@ -44,6 +46,10 @@ class ShadowSlaveInterfaceImpl : ShadowSlaveInterfaceService {
         }
         logger.info { "Ну, мы закончили, и кажись где-то были ошибкасы, так что вот список глав с которыми были проблемы:\n" +
                 "\tглавы - $chapterWithErrors" }
+    }
+
+    override fun printProcessChapter(chapterNum: Int) {
+        logger.info { "Приступаю к главе - $chapterNum" }
     }
 
 }

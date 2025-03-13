@@ -13,4 +13,6 @@ interface ShadowSlaveInterfaceService: InterfaceService {
     fun askTargetFolder()
 
     fun printFinishStatus(chapterWithErrors: HashSet<ChapterErrorDto>)
+
+    fun printProcessChapter(chapterNum: Int)
 }
