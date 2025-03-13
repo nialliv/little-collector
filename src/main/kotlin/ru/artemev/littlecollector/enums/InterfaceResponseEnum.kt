@@ -1,4 +1,4 @@
-package ru.artemev.littlecollector.dto
+package ru.artemev.littlecollector.enums
 
 enum class InterfaceResponseEnum(val code: String) {
 
