@@ -12,14 +12,14 @@ private val logger = KotlinLogging.logger {}
 
 @SpringBootApplication
 class LittleCollectorApplication(
-    private val defaultInterfaceService: InterfaceService,
+    private val beginInterfaceService: InterfaceService,
     private val shadowSlaveDownloader: ShadowSlaveDownloader
 ) : CommandLineRunner {
 
     override fun run(vararg args: String?) {
-        defaultInterfaceService.printHello()
-        defaultInterfaceService.printMenu()
-        processByService(defaultInterfaceService.wrapperInput())
+        beginInterfaceService.printHello()
+        beginInterfaceService.printMenu()
+        processByService(beginInterfaceService.wrapperInput())
     }
 
     private fun processByService(response: String) {
@@ -27,13 +27,13 @@ class LittleCollectorApplication(
             InterfaceResponseEnum.SHADOW_SLAVE.code -> shadowSlaveDownloader.process()
             InterfaceResponseEnum.EXIT.code -> logger.info { "Это ты идешь нахер и пока..." }
             else -> {
-                defaultInterfaceService.wrongAction()
-                return processByService(defaultInterfaceService.wrapperInput())
+                beginInterfaceService.wrongAction()
+                return processByService(beginInterfaceService.wrapperInput())
             }
         }
     }
 }
 
 fun main(args: Array<String>) {
-    runApplication<LittleCollectorApplication>(*args)
+    runApplication<LittleCollectorApplication>(*args).close()
 }

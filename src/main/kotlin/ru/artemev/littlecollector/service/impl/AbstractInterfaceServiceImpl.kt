@@ -36,6 +36,6 @@ abstract class AbstractInterfaceServiceImpl : InterfaceService {
     }
 
     override fun error(exception: Exception) {
-        logger.error(exception) { "Дядя, у нас какая-то хрень случилась..." }
+        logger.error { "Дядя, у нас какая-то хрень случилась... Error - ${exception.message}" }
     }
 }

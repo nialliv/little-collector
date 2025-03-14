@@ -5,5 +5,9 @@ spring:
 logging:
   pattern:
     console: "[%highlight(%level)] - %msg%n"
+#    console: "[%highlight(%level)] - %logger - %msg%n"
   level:
     ru.artemev.littlecollector.LittleCollectorApplicationKt: WARN
+    org.docx4j: ERROR
+    org.apache: ERROR
+    org.springframework.boot: ERROR

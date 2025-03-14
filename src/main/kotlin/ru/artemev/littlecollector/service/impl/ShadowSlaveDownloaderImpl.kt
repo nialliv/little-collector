@@ -4,7 +4,13 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
+import org.docx4j.openpackaging.packages.WordprocessingMLPackage
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
+import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
+import org.springframework.web.client.RestClient
+import org.springframework.web.client.body
 import ru.artemev.littlecollector.dto.ChapterErrorDto
 import ru.artemev.littlecollector.dto.ChatExportDto
 import ru.artemev.littlecollector.enums.ShadowSlaveAction
@@ -17,7 +23,8 @@ private val logger = KotlinLogging.logger {}
 
 @Service
 class ShadowSlaveDownloaderImpl(
-    private val shadowSlaveInterfaceService: ShadowSlaveInterfaceService
+    private val shadowSlaveInterfaceService: ShadowSlaveInterfaceService,
+    private val shadowSlaveRestClient: RestClient
 ) : ShadowSlaveDownloader {
 
     companion object {
@@ -66,7 +73,10 @@ class ShadowSlaveDownloaderImpl(
         val targetFolder = getTargetFolder() ?: return
 
         val chapterWithErrors = HashSet<ChapterErrorDto>()
-        requiredChapters.forEach { processChapter(it, chapterMap, targetFolder, chapterWithErrors) }
+        requiredChapters.forEach {
+            shadowSlaveInterfaceService.printProcessChapter(it)
+            processChapter(it, chapterMap, targetFolder, chapterWithErrors)
+        }
 
         shadowSlaveInterfaceService.printFinishStatus(chapterWithErrors)
     }
@@ -78,7 +88,7 @@ class ShadowSlaveDownloaderImpl(
             ValidatorHelper.validateTargetFolder(targetFolder)
             return targetFolder
         } catch (ex: Exception) {
-            if(isUserWantAgain(ex)) {
+            if (isUserWantAgain(ex)) {
                 return getTargetFolder()
             }
             return null
@@ -93,7 +103,7 @@ class ShadowSlaveDownloaderImpl(
                 .let { convertRangeToSet(it) }
                 .also { ValidatorHelper.checkChapterExistsInExport(it, chapterMap) }
         } catch (ex: Exception) {
-            if(isUserWantAgain(ex)) {
+            if (isUserWantAgain(ex)) {
                 return getRequireChapters(chapterMap)
             }
             return null
@@ -121,17 +131,53 @@ class ShadowSlaveDownloaderImpl(
         return resp.equals(YES, true)
     }
 
+    //todo refactor this
     private fun processChapter(
         chapterNum: Int,
         chapterMap: Map<Int?, List<String?>>,
         targetFolder: String,
         chapterWithErrors: HashSet<ChapterErrorDto>
     ) {
-        shadowSlaveInterfaceService.printProcessChapter(chapterNum)
-        // always must be one element, but... mb not? =)
-        val href = chapterMap[chapterNum]?.get(0)
+        try {
+            // always must be one element, but... mb not? =)
+            val href = chapterMap[chapterNum]?.get(0) ?: throw IllegalArgumentException("Href is null")
+            val htmlPage = getHtmlPageResponse(href)
+            val article = getFirstArticleByJsoup(htmlPage)
 
+            val title = article.getElementsByTag("h1")[0].text()
+            val paragraphs = article.getElementsByTag("p")
+                .map { it.text() }
+                .toMutableList()
+                .also { cleaningParagraphs(it) }
+
+            val wordPackage = WordprocessingMLPackage.createPackage()
+            val mainDocumentPart = wordPackage.mainDocumentPart
+            mainDocumentPart.addStyledParagraphOfText("Title", title)
+            mainDocumentPart.addParagraphOfText("")
+            paragraphs.forEach { mainDocumentPart.addParagraphOfText(it) }
+            wordPackage.save(File("$targetFolder/Глава $chapterNum.docx"))
+
+        } catch (ex: Exception) {
+            shadowSlaveInterfaceService.errorWithChapter(ex, chapterNum)
+            chapterWithErrors.add(ChapterErrorDto(chapterNum, ex.message ?: "Message is null =("))
+        }
     }
+
+    private fun cleaningParagraphs(paragraphs: MutableList<String>) {
+        paragraphs
+            .removeAll { it.contains(Regex("^Предыдущая глава$|^Следующая глава$|^$")) }
+    }
+
+    private fun getFirstArticleByJsoup(it: String): Element = Jsoup.parse(it).body().getElementsByTag("article")[0]
+
+    private fun getHtmlPageResponse(href: String): String =
+        shadowSlaveRestClient.get()
+            .uri(href)
+            .accept(MediaType.TEXT_HTML)
+            .retrieve()
+            .body<String>()
+            ?: throw RuntimeException("Cannot get html by href - $href")
+
 
     @OptIn(ExperimentalSerializationApi::class)
     private fun getChatExportDto(filePath: File): ChatExportDto {

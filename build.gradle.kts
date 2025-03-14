@@ -25,6 +25,13 @@ dependencies {
     implementation(kotlin("reflect"))
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.jsoup:jsoup:1.19.1")
+    implementation("org.docx4j:docx4j-core:11.5.2")
+    implementation("org.docx4j:docx4j-JAXB-ReferenceImpl:11.5.2")
+//    implementation("org.glassfish.jaxb:jaxb-runtime:4.0.5")
+//    implementation("jakarta.xml.bind:jakarta.xml.bind-api:4.0.2")
+
 }
 
 kotlin {

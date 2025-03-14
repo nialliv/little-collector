@@ -1,6 +1,6 @@
 package ru.artemev.littlecollector.dto
 
 data class ChapterErrorDto(
-    val chapter: String,
+    val chapter: Int,
     val chapterErrorMessage: String
 )

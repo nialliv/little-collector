@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.artemev.littlecollector.dto.ChapterErrorDto
 import ru.artemev.littlecollector.service.ShadowSlaveInterfaceService
+import java.lang.Exception
 
 private val logger = KotlinLogging.logger {}
 
@@ -28,11 +29,11 @@ class ShadowSlaveInterfaceImpl
     }
 
     override fun askFilePassMessage() {
-        logger.info { "Скажи, куда ты положил выгрузку?" }
+        logger.info { "Скинь путь до файла выгрузки" }
     }
 
     override fun askRangeChapters() {
-        logger.info { "Какой диапазон глав качаем? Пример ввода: 1-200 ИЛИ 1-2000" }
+        logger.info { "Какой диапазон глав качаем? Пример: 1-200" }
     }
 
     override fun askTargetFolder() {
@@ -45,11 +46,16 @@ class ShadowSlaveInterfaceImpl
             return
         }
         logger.info { "Ну, мы закончили, и кажись где-то были ошибкасы, так что вот список глав с которыми были проблемы:\n" +
-                "\tглавы - $chapterWithErrors" }
+                chapterWithErrors.joinToString(",\n")
+        }
     }
 
     override fun printProcessChapter(chapterNum: Int) {
         logger.info { "Приступаю к главе - $chapterNum" }
+    }
+
+    override fun errorWithChapter(exception: Exception, chapterNum: Int) {
+        logger.error { "Проблемка с главой - $chapterNum. Ошибкас - ${exception.message}" }
     }
 
 }
