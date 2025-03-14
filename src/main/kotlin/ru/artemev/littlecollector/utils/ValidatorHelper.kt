@@ -24,16 +24,22 @@ object ValidatorHelper {
 
     fun checkChapterExistsInExport(
         requiredChapters: Set<Int>,
-        chapterMap: Map<Int?, List<String?>>
+        chapterMap: Map<Int, String?>
     ) {
         if (!chapterMap.keys.containsAll(requiredChapters)) {
-            throw RuntimeException("Range is not all contains chapters")
+            throw RuntimeException(
+                "Range is not all contains chapters - not founded - ${
+                    requiredChapters.minus(
+                        chapterMap.keys
+                    )
+                }"
+            )
         }
 
         requiredChapters
             .forEach {
-                val hrefs = chapterMap[it]
-                if (hrefs.isNullOrEmpty() || !validateHrefs(hrefs)) {
+                val href = chapterMap[it]
+                if (href.isNullOrBlank() || !validateHrefs(href)) {
                     throw RuntimeException("All links for $it not valid...")
                 }
             }
@@ -41,9 +47,9 @@ object ValidatorHelper {
     }
 
     fun validateTargetFolder(targetFolder: String) {
-        if(targetFolder.isNotBlank()) {
+        if (targetFolder.isNotBlank()) {
             val file = File(targetFolder)
-            if(file.exists() && file.canWrite() && file.isDirectory) {
+            if (file.exists() && file.canWrite() && file.isDirectory) {
                 return
             }
         }
@@ -51,8 +57,6 @@ object ValidatorHelper {
     }
 
 
-    private fun validateHrefs(hrefs: List<String?>): Boolean = hrefs.any {
-        it != null && Regex("([A-Za-z]*://)?\\S*").containsMatchIn(it)
-    }
+    private fun validateHrefs(href: String): Boolean = Regex("([A-Za-z]*://)?\\S*").containsMatchIn(href)
 
 }

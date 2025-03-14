@@ -1,6 +1,5 @@
 package ru.artemev.littlecollector.service.impl
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
@@ -19,8 +18,6 @@ import ru.artemev.littlecollector.service.ShadowSlaveInterfaceService
 import ru.artemev.littlecollector.utils.ValidatorHelper
 import java.io.File
 
-private val logger = KotlinLogging.logger {}
-
 @Service
 class ShadowSlaveDownloaderImpl(
     private val shadowSlaveInterfaceService: ShadowSlaveInterfaceService,
@@ -37,10 +34,33 @@ class ShadowSlaveDownloaderImpl(
         handleActionCode(shadowSlaveInterfaceService.wrapperInput())
     }
 
+    override fun getNumberOfLastChapter() {
+        shadowSlaveInterfaceService.printInfoAboutCheckLasChapter()
+        val chatExport = getChatExport() ?: return
+        val maxChapter = getMaxChapter(chatExport)
+        shadowSlaveInterfaceService.printLastChapter(maxChapter)
+
+        shadowSlaveInterfaceService.askAboutDownloadRange()
+        if (isYesInResponse()) {
+            saveRangeChapters(chatExport)
+        }
+    }
+
+    private fun getMaxChapter(chatExport: ChatExportDto) = chatExport.messages
+        .asSequence()
+        .filter { it.type == "message" }
+        .flatMap { it.textEntities }
+        .filter { it.type == "text_link" }
+        .map { getChapter(it.text) }
+        .filter { it?.isNotBlank() ?: false }
+        .mapNotNull { it?.toInt() }
+        .toList()
+        .max()
+
     private fun handleActionCode(wrapperInput: String) {
         when (wrapperInput) {
-//            ShadowSlaveAction.LAST_CHAPTER.actionCode -> getNumberOfLastChapter()
-            ShadowSlaveAction.SAVE_CHAPTERS.actionCode -> saveRangeChapters()
+            ShadowSlaveAction.LAST_CHAPTER.actionCode -> getNumberOfLastChapter()
+            ShadowSlaveAction.SAVE_CHAPTERS.actionCode -> saveRangeChapters(null)
             else -> {
                 shadowSlaveInterfaceService.wrongAction()
                 handleActionCode(shadowSlaveInterfaceService.wrapperInput())
@@ -62,12 +82,10 @@ class ShadowSlaveDownloaderImpl(
 
         get status.
     */
-    override fun saveRangeChapters() {
+    override fun saveRangeChapters(chatExport: ChatExportDto?) {
         shadowSlaveInterfaceService.printInfoForDownloadShadowSlave()
 
-        val chatExport = getChatExport() ?: return
-        val chapterMap = getChapters(chatExport)
-
+        val chapterMap = getChapters(chatExport ?: getChatExport() ?: return)
         val requiredChapters: Set<Int> = getRequireChapters(chapterMap) ?: return
 
         val targetFolder = getTargetFolder() ?: return
@@ -95,7 +113,7 @@ class ShadowSlaveDownloaderImpl(
         }
     }
 
-    private fun getRequireChapters(chapterMap: Map<Int?, List<String?>>): Set<Int>? {
+    private fun getRequireChapters(chapterMap: Map<Int, String?>): Set<Int>? {
         try {
             shadowSlaveInterfaceService.askRangeChapters()
             return shadowSlaveInterfaceService.wrapperInput()
@@ -127,6 +145,10 @@ class ShadowSlaveDownloaderImpl(
     private fun isUserWantAgain(ex: Exception): Boolean {
         shadowSlaveInterfaceService.error(ex)
         shadowSlaveInterfaceService.printOtherTry()
+        return isYesInResponse()
+    }
+
+    private fun isYesInResponse(): Boolean {
         val resp = shadowSlaveInterfaceService.wrapperYesOrNot()
         return resp.equals(YES, true)
     }
@@ -134,13 +156,13 @@ class ShadowSlaveDownloaderImpl(
     //todo refactor this
     private fun processChapter(
         chapterNum: Int,
-        chapterMap: Map<Int?, List<String?>>,
+        chapterMap: Map<Int, String?>,
         targetFolder: String,
         chapterWithErrors: HashSet<ChapterErrorDto>
     ) {
         try {
             // always must be one element, but... mb not? =)
-            val href = chapterMap[chapterNum]?.get(0) ?: throw IllegalArgumentException("Href is null")
+            val href = chapterMap[chapterNum] ?: throw IllegalArgumentException("Href is null")
             val htmlPage = getHtmlPageResponse(href)
             val article = getFirstArticleByJsoup(htmlPage)
 
@@ -187,19 +209,18 @@ class ShadowSlaveDownloaderImpl(
         return json.decodeFromStream<ChatExportDto>(filePath.inputStream())
     }
 
-    //todo convert to Map<Int, String>
-    private fun getChapters(chatExport: ChatExportDto): Map<Int?, List<String?>> {
+    private fun getChapters(chatExport: ChatExportDto): Map<Int, String?> {
         return chatExport.messages
             .filter { it.type == "message" }
             .flatMap { it.textEntities }
             .filter { it.type == "text_link" }
-            .groupBy({ getChapter(it.text) }, { it.href })
+            .associateBy({ getChapter(it.text) }, { it.href })
             .filterKeys { it?.isNotBlank() ?: false }
-            .mapKeys { it.key?.toInt() }
+            .mapKeys { it.key!!.toInt() }
     }
 
     private fun getChapter(text: String): String? =
-        Regex("^.*?\\s(\\d*).*?\$").find(text)?.groups?.get(1)?.value
+        Regex("^.*?\\s(\\d*).*?\$").find(text.trim())?.groups?.get(1)?.value
 
     private fun convertRangeToSet(chaptersRange: String): Set<Int> {
         return chaptersRange.split("-")

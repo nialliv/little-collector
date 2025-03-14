@@ -4,7 +4,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.artemev.littlecollector.dto.ChapterErrorDto
 import ru.artemev.littlecollector.service.ShadowSlaveInterfaceService
-import java.lang.Exception
 
 private val logger = KotlinLogging.logger {}
 
@@ -18,8 +17,8 @@ class ShadowSlaveInterfaceImpl
 
     override fun printMenu() {
         logger.info {
-            "Че качаем?\n" +
-                    "\t1 - Какая последняя глава на сайте?\n" +
+            "Что интересует?\n" +
+                    "\t1 - Какая последняя доступная глава?\n" +
                     "\t2 - Давай качать главы"
         }
     }
@@ -41,12 +40,13 @@ class ShadowSlaveInterfaceImpl
     }
 
     override fun printFinishStatus(chapterWithErrors: HashSet<ChapterErrorDto>) {
-        if(chapterWithErrors.isEmpty()) {
+        if (chapterWithErrors.isEmpty()) {
             logger.info { "Ну, мы закончили, и походу прошло все без ошибок =)" }
             return
         }
-        logger.info { "Ну, мы закончили, и кажись где-то были ошибкасы, так что вот список глав с которыми были проблемы:\n" +
-                chapterWithErrors.joinToString(",\n")
+        logger.info {
+            "Ну, мы закончили, и кажись где-то были ошибкасы, так что вот список глав с которыми были проблемы:\n" +
+                    chapterWithErrors.joinToString(",\n")
         }
     }
 
@@ -56,6 +56,18 @@ class ShadowSlaveInterfaceImpl
 
     override fun errorWithChapter(exception: Exception, chapterNum: Int) {
         logger.error { "Проблемка с главой - $chapterNum. Ошибкас - ${exception.message}" }
+    }
+
+    override fun printInfoAboutCheckLasChapter() {
+        logger.info { "Короче, чтоб посмотреть последнюю главу - скачай выгрузку канала" }
+    }
+
+    override fun printLastChapter(maxChapter: Int) {
+        logger.info { "Итак последняя глава в выгрузке - $maxChapter" }
+    }
+
+    override fun askAboutDownloadRange() {
+        logger.info { "Зная, какая последняя глава, не хочешь сохранить немного глав? =)" }
     }
 
 }

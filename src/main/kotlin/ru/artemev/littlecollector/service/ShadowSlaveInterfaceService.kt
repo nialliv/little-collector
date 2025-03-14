@@ -1,9 +1,8 @@
 package ru.artemev.littlecollector.service
 
 import ru.artemev.littlecollector.dto.ChapterErrorDto
-import java.lang.Exception
 
-interface ShadowSlaveInterfaceService: InterfaceService {
+interface ShadowSlaveInterfaceService : InterfaceService {
 
     fun printInfoForDownloadShadowSlave()
 
@@ -18,4 +17,10 @@ interface ShadowSlaveInterfaceService: InterfaceService {
     fun printProcessChapter(chapterNum: Int)
 
     fun errorWithChapter(exception: Exception, chapterNum: Int)
+
+    fun printInfoAboutCheckLasChapter()
+
+    fun printLastChapter(maxChapter: Int)
+
+    fun askAboutDownloadRange()
 }

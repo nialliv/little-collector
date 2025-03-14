@@ -1,14 +1,15 @@
 package ru.artemev.littlecollector.service
 
+import ru.artemev.littlecollector.dto.ChatExportDto
+
 interface ShadowSlaveDownloader {
 
     fun process()
 
-    //uncomment when created tg bot
     // Получение номера последней главы
-//    fun getNumberOfLastChapter(): Int
+    fun getNumberOfLastChapter()
 
     // Сохранение ренджа глав - пример: 1-30, 1790-2000 + вопросы как и куда сохранять
-    fun saveRangeChapters()
+    fun saveRangeChapters(chatExport: ChatExportDto?)
 }
 
