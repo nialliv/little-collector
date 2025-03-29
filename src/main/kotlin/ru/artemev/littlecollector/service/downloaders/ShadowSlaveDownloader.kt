@@ -1,10 +1,8 @@
-package ru.artemev.littlecollector.service
+package ru.artemev.littlecollector.service.downloaders
 
 import ru.artemev.littlecollector.dto.ChatExportDto
 
-interface ShadowSlaveDownloader {
-
-    fun process()
+interface ShadowSlaveDownloader : Downloader {
 
     // Получение номера последней главы
     fun getNumberOfLastChapter()

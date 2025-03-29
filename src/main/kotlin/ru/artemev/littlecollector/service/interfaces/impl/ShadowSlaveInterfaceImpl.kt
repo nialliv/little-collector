@@ -1,9 +1,10 @@
-package ru.artemev.littlecollector.service.impl
+package ru.artemev.littlecollector.service.interfaces.impl
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.artemev.littlecollector.dto.ChapterErrorDto
-import ru.artemev.littlecollector.service.ShadowSlaveInterfaceService
+import ru.artemev.littlecollector.service.interfaces.AbstractInterfaceServiceImpl
+import ru.artemev.littlecollector.service.interfaces.ShadowSlaveInterfaceService
 
 private val logger = KotlinLogging.logger {}
 

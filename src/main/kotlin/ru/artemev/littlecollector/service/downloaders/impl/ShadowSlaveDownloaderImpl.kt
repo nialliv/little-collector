@@ -1,4 +1,4 @@
-package ru.artemev.littlecollector.service.impl
+package ru.artemev.littlecollector.service.downloaders.impl
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -6,6 +6,7 @@ import kotlinx.serialization.json.decodeFromStream
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
@@ -13,25 +14,38 @@ import org.springframework.web.client.body
 import ru.artemev.littlecollector.dto.ChapterErrorDto
 import ru.artemev.littlecollector.dto.ChatExportDto
 import ru.artemev.littlecollector.enums.ShadowSlaveAction
-import ru.artemev.littlecollector.service.ShadowSlaveDownloader
-import ru.artemev.littlecollector.service.ShadowSlaveInterfaceService
+import ru.artemev.littlecollector.service.downloaders.ShadowSlaveDownloader
+import ru.artemev.littlecollector.service.interfaces.ShadowSlaveInterfaceService
 import ru.artemev.littlecollector.utils.ValidatorHelper
 import java.io.File
 
 @Service
 class ShadowSlaveDownloaderImpl(
     private val shadowSlaveInterfaceService: ShadowSlaveInterfaceService,
-    private val shadowSlaveRestClient: RestClient
+    @Qualifier("shadowSlaveWebClient") private val shadowSlaveRestClient: RestClient
 ) : ShadowSlaveDownloader {
 
     companion object {
         private const val YES = "Y"
     }
 
+    //todo refactor to abstract class
     override fun process() {
         shadowSlaveInterfaceService.printHello()
         shadowSlaveInterfaceService.printMenu()
         handleActionCode(shadowSlaveInterfaceService.wrapperInput())
+    }
+
+    //todo refactor to abstract class
+    override fun handleActionCode(wrapperInput: String) {
+        when (wrapperInput) {
+            ShadowSlaveAction.LAST_CHAPTER.actionCode -> getNumberOfLastChapter()
+            ShadowSlaveAction.SAVE_CHAPTERS.actionCode -> saveRangeChapters(null)
+            else -> {
+                shadowSlaveInterfaceService.wrongAction()
+                handleActionCode(shadowSlaveInterfaceService.wrapperInput())
+            }
+        }
     }
 
     override fun getNumberOfLastChapter() {
@@ -56,17 +70,6 @@ class ShadowSlaveDownloaderImpl(
         .mapNotNull { it?.toInt() }
         .toList()
         .max()
-
-    private fun handleActionCode(wrapperInput: String) {
-        when (wrapperInput) {
-            ShadowSlaveAction.LAST_CHAPTER.actionCode -> getNumberOfLastChapter()
-            ShadowSlaveAction.SAVE_CHAPTERS.actionCode -> saveRangeChapters(null)
-            else -> {
-                shadowSlaveInterfaceService.wrongAction()
-                handleActionCode(shadowSlaveInterfaceService.wrapperInput())
-            }
-        }
-    }
 
     /*
         get info and what needed.
@@ -128,6 +131,7 @@ class ShadowSlaveDownloaderImpl(
         }
     }
 
+    //=============todo refactor to abstract class
     private fun getChatExport(): ChatExportDto? {
         shadowSlaveInterfaceService.askFilePassMessage()
         try {
@@ -152,6 +156,7 @@ class ShadowSlaveDownloaderImpl(
         val resp = shadowSlaveInterfaceService.wrapperYesOrNot()
         return resp.equals(YES, true)
     }
+    //=============todo refactor to abstract class
 
     //todo refactor this
     private fun processChapter(

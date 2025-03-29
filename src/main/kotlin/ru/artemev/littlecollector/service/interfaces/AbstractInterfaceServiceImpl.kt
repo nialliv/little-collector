@@ -1,7 +1,6 @@
-package ru.artemev.littlecollector.service.impl
+package ru.artemev.littlecollector.service.interfaces
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import ru.artemev.littlecollector.service.InterfaceService
 
 private val logger = KotlinLogging.logger {}
 

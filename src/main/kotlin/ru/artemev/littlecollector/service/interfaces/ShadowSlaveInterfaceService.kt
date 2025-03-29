@@ -1,4 +1,4 @@
-package ru.artemev.littlecollector.service
+package ru.artemev.littlecollector.service.interfaces
 
 import ru.artemev.littlecollector.dto.ChapterErrorDto
 

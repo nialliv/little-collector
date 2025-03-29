@@ -12,4 +12,9 @@ class RestClientConfig {
         return RestClient.builder()
             .build()
     }
+
+    @Bean
+    fun lotmWebClient(): RestClient {
+        return RestClient.builder().build()
+    }
 }
