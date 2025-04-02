@@ -1,6 +1,6 @@
 package ru.artemev.littlecollector.enums
 
-enum class ShadowSlaveAction(val actionCode:String) {
+enum class TelegraphActionsEnum(val actionCode: String) {
 
     LAST_CHAPTER("1"),
     SAVE_CHAPTERS("2")

@@ -3,7 +3,7 @@ package ru.artemev.littlecollector.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TextEntity (
+data class TextEntity(
 
     val type: String,
 

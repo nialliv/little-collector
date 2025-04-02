@@ -13,21 +13,19 @@ import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
 import ru.artemev.littlecollector.dto.ChapterErrorDto
 import ru.artemev.littlecollector.dto.ChatExportDto
-import ru.artemev.littlecollector.enums.ShadowSlaveAction
-import ru.artemev.littlecollector.service.downloaders.ShadowSlaveDownloader
+import ru.artemev.littlecollector.enums.TelegraphActionsEnum
+import ru.artemev.littlecollector.service.downloaders.AbstractTelegraphDownloader
 import ru.artemev.littlecollector.service.interfaces.ShadowSlaveInterfaceService
+import ru.artemev.littlecollector.utils.Constants.YES
 import ru.artemev.littlecollector.utils.ValidatorHelper
 import java.io.File
 
 @Service
 class ShadowSlaveDownloaderImpl(
     private val shadowSlaveInterfaceService: ShadowSlaveInterfaceService,
-    @Qualifier("shadowSlaveWebClient") private val shadowSlaveRestClient: RestClient
-) : ShadowSlaveDownloader {
-
-    companion object {
-        private const val YES = "Y"
-    }
+    @Qualifier("shadowSlaveWebClient")
+    private val shadowSlaveRestClient: RestClient
+) : AbstractTelegraphDownloader(shadowSlaveInterfaceService) {
 
     //todo refactor to abstract class
     override fun process() {
@@ -39,8 +37,8 @@ class ShadowSlaveDownloaderImpl(
     //todo refactor to abstract class
     override fun handleActionCode(wrapperInput: String) {
         when (wrapperInput) {
-            ShadowSlaveAction.LAST_CHAPTER.actionCode -> getNumberOfLastChapter()
-            ShadowSlaveAction.SAVE_CHAPTERS.actionCode -> saveRangeChapters(null)
+            TelegraphActionsEnum.LAST_CHAPTER.actionCode -> getNumberOfLastChapter()
+            TelegraphActionsEnum.SAVE_CHAPTERS.actionCode -> saveRangeChapters(null)
             else -> {
                 shadowSlaveInterfaceService.wrongAction()
                 handleActionCode(shadowSlaveInterfaceService.wrapperInput())

@@ -13,8 +13,11 @@ import org.springframework.web.client.body
 import ru.artemev.littlecollector.dto.ChapterErrorDto
 import ru.artemev.littlecollector.dto.ChatExportDto
 import ru.artemev.littlecollector.enums.LordOfTheMysteriesAction
+import ru.artemev.littlecollector.service.downloaders.AbstractTelegraphDownloader
 import ru.artemev.littlecollector.service.downloaders.LordOfTheMysteriesDownloader
 import ru.artemev.littlecollector.service.interfaces.LordOfTheMysteriesInterfaceService
+import ru.artemev.littlecollector.utils.Constants.YES
+
 import ru.artemev.littlecollector.utils.ValidatorHelper
 import java.io.File
 
@@ -22,12 +25,7 @@ import java.io.File
 class LordOfTheMysteriesDownloaderImpl(
     private val lordOfTheMysteriesInterfaceService: LordOfTheMysteriesInterfaceService,
     @Qualifier("lotmWebClient") private val lotmRestClient: RestClient
-) : LordOfTheMysteriesDownloader {
-
-    //todo mb should create obj for constants
-    companion object {
-        private const val YES = "Y"
-    }
+) : AbstractTelegraphDownloader(lordOfTheMysteriesInterfaceService), LordOfTheMysteriesDownloader {
 
     override fun process() {
         lordOfTheMysteriesInterfaceService.printHello()

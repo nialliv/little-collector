@@ -18,7 +18,7 @@ interface ShadowSlaveInterfaceService : InterfaceService {
 
     fun errorWithChapter(exception: Exception, chapterNum: Int)
 
-    fun printInfoAboutCheckLasChapter()
+    fun printInfoAboutCheckLasChapter() // todo go to abstract class
 
     fun printLastChapter(maxChapter: Int)
 

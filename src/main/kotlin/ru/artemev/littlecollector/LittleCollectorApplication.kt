@@ -4,7 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
-import ru.artemev.littlecollector.enums.InterfaceResponseEnum
+import ru.artemev.littlecollector.enums.ServicesEnum
 import ru.artemev.littlecollector.service.downloaders.LordOfTheMysteriesDownloader
 import ru.artemev.littlecollector.service.downloaders.ShadowSlaveDownloader
 import ru.artemev.littlecollector.service.interfaces.InterfaceService
@@ -25,10 +25,11 @@ class LittleCollectorApplication(
     }
 
     private fun processByService(response: String) {
+        // todo refactor when
         when (response) {
-            InterfaceResponseEnum.SHADOW_SLAVE.code -> shadowSlaveDownloader.process()
-            InterfaceResponseEnum.LORD_OF_THE_MYSTERIES.code -> lordOfTheMysteriesDownloader.process()
-            InterfaceResponseEnum.EXIT.code -> logger.info { "Это ты идешь нахер и пока..." }
+            ServicesEnum.SHADOW_SLAVE.code -> shadowSlaveDownloader.process()
+            ServicesEnum.LORD_OF_THE_MYSTERIES.code -> lordOfTheMysteriesDownloader.process()
+            ServicesEnum.EXIT.code -> logger.info { "Это ты идешь нахер и пока..." }
             else -> {
                 beginInterfaceService.wrongAction()
                 return processByService(beginInterfaceService.wrapperInput())
