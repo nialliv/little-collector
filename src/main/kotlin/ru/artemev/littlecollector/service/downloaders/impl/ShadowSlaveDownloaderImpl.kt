@@ -13,19 +13,25 @@ import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
 import ru.artemev.littlecollector.dto.ChapterErrorDto
 import ru.artemev.littlecollector.dto.ChatExportDto
+import ru.artemev.littlecollector.enums.ServicesEnum
 import ru.artemev.littlecollector.enums.TelegraphActionsEnum
 import ru.artemev.littlecollector.service.downloaders.AbstractTelegraphDownloader
-import ru.artemev.littlecollector.service.interfaces.ShadowSlaveInterfaceService
+import ru.artemev.littlecollector.service.printer.telegraph.ShadowSlavePrinter
 import ru.artemev.littlecollector.utils.Constants.YES
 import ru.artemev.littlecollector.utils.ValidatorHelper
 import java.io.File
 
 @Service
 class ShadowSlaveDownloaderImpl(
-    private val shadowSlaveInterfaceService: ShadowSlaveInterfaceService,
+    private val shadowSlaveInterfaceService: ShadowSlavePrinter,
     @Qualifier("shadowSlaveWebClient")
     private val shadowSlaveRestClient: RestClient
 ) : AbstractTelegraphDownloader(shadowSlaveInterfaceService) {
+
+
+    override fun isSupported(serviceEnum: ServicesEnum): Boolean {
+        return ServicesEnum.SHADOW_SLAVE == serviceEnum
+    }
 
     //todo refactor to abstract class
     override fun process() {
@@ -58,16 +64,7 @@ class ShadowSlaveDownloaderImpl(
         }
     }
 
-    private fun getMaxChapter(chatExport: ChatExportDto) = chatExport.messages
-        .asSequence()
-        .filter { it.type == "message" }
-        .flatMap { it.textEntities }
-        .filter { it.type == "text_link" }
-        .map { getChapter(it.text) }
-        .filter { it?.isNotBlank() ?: false }
-        .mapNotNull { it?.toInt() }
-        .toList()
-        .max()
+
 
     /*
         get info and what needed.
@@ -128,33 +125,6 @@ class ShadowSlaveDownloaderImpl(
             return null
         }
     }
-
-    //=============todo refactor to abstract class
-    private fun getChatExport(): ChatExportDto? {
-        shadowSlaveInterfaceService.askFilePassMessage()
-        try {
-            return File(shadowSlaveInterfaceService.wrapperInput())
-                .also { ValidatorHelper.validateFilePath(it) }
-                .let { getChatExportDto(it) }
-        } catch (ex: Exception) {
-            if (isUserWantAgain(ex)) {
-                return getChatExport()
-            }
-            return null
-        }
-    }
-
-    private fun isUserWantAgain(ex: Exception): Boolean {
-        shadowSlaveInterfaceService.error(ex)
-        shadowSlaveInterfaceService.printOtherTry()
-        return isYesInResponse()
-    }
-
-    private fun isYesInResponse(): Boolean {
-        val resp = shadowSlaveInterfaceService.wrapperYesOrNot()
-        return resp.equals(YES, true)
-    }
-    //=============todo refactor to abstract class
 
     //todo refactor this
     private fun processChapter(

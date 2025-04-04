@@ -7,21 +7,22 @@ import org.springframework.boot.runApplication
 import ru.artemev.littlecollector.enums.ServicesEnum
 import ru.artemev.littlecollector.service.downloaders.LordOfTheMysteriesDownloader
 import ru.artemev.littlecollector.service.downloaders.ShadowSlaveDownloader
-import ru.artemev.littlecollector.service.interfaces.InterfaceService
+import ru.artemev.littlecollector.service.printer.PrinterService
 
 private val logger = KotlinLogging.logger {}
 
 @SpringBootApplication
 class LittleCollectorApplication(
-    private val beginInterfaceService: InterfaceService,
+    private val beginPrinterService: PrinterService,
+    //todo create handler maybe
     private val shadowSlaveDownloader: ShadowSlaveDownloader,
     private val lordOfTheMysteriesDownloader: LordOfTheMysteriesDownloader
 ) : CommandLineRunner {
 
     override fun run(vararg args: String?) {
-        beginInterfaceService.printHello()
-        beginInterfaceService.printMenu()
-        processByService(beginInterfaceService.wrapperInput())
+        beginPrinterService.printHello()
+        beginPrinterService.printMenu()
+        processByService(beginPrinterService.wrapperInput())
     }
 
     private fun processByService(response: String) {
@@ -31,8 +32,8 @@ class LittleCollectorApplication(
             ServicesEnum.LORD_OF_THE_MYSTERIES.code -> lordOfTheMysteriesDownloader.process()
             ServicesEnum.EXIT.code -> logger.info { "Это ты идешь нахер и пока..." }
             else -> {
-                beginInterfaceService.wrongAction()
-                return processByService(beginInterfaceService.wrapperInput())
+                beginPrinterService.wrongAction()
+                return processByService(beginPrinterService.wrapperInput())
             }
         }
     }

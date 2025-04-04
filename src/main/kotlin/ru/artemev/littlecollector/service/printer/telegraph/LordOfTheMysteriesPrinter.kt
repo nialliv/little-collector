@@ -1,15 +1,13 @@
-package ru.artemev.littlecollector.service.interfaces.impl
+package ru.artemev.littlecollector.service.printer.telegraph
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
-import ru.artemev.littlecollector.service.interfaces.AbstractInterfaceServiceImpl
-import ru.artemev.littlecollector.service.interfaces.LordOfTheMysteriesInterfaceService
 
 private val logger = KotlinLogging.logger {}
 
 @Service
-class LordOfTheMysteriesInterfaceServiceImpl
-    : AbstractInterfaceServiceImpl(), LordOfTheMysteriesInterfaceService {
+class LordOfTheMysteriesPrinter
+    : AbstractTelegraphPrinterService() {
 
     override fun printHello() {
         logger.info { "Получается качаем повелителя тайн..." }

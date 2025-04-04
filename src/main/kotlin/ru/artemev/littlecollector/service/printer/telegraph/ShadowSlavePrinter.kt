@@ -1,16 +1,14 @@
-package ru.artemev.littlecollector.service.interfaces.impl
+package ru.artemev.littlecollector.service.printer.telegraph
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.artemev.littlecollector.dto.ChapterErrorDto
-import ru.artemev.littlecollector.service.interfaces.AbstractInterfaceServiceImpl
-import ru.artemev.littlecollector.service.interfaces.ShadowSlaveInterfaceService
 
-private val logger = KotlinLogging.logger {}
+private val logger = KotlinLogging.logger {  }
 
 @Service
-class ShadowSlaveInterfaceImpl
-    : AbstractInterfaceServiceImpl(), ShadowSlaveInterfaceService {
+class ShadowSlavePrinter
+    : AbstractTelegraphPrinterService() {
 
     override fun printHello() {
         logger.info { "Получается качаем теневого раба..." }
@@ -28,9 +26,7 @@ class ShadowSlaveInterfaceImpl
         logger.info { "Чтоб скачать всякое - над предварительно выкачать с канала jsonExport" }
     }
 
-    override fun askFilePassMessage() {
-        logger.info { "Скинь путь до файла выгрузки" }
-    }
+
 
     override fun askRangeChapters() {
         logger.info { "Какой диапазон глав качаем? Пример: 1-200" }
@@ -57,10 +53,6 @@ class ShadowSlaveInterfaceImpl
 
     override fun errorWithChapter(exception: Exception, chapterNum: Int) {
         logger.error { "Проблемка с главой - $chapterNum. Ошибкас - ${exception.message}" }
-    }
-
-    override fun printInfoAboutCheckLasChapter() {
-        logger.info { "Короче, чтоб посмотреть последнюю главу - скачай выгрузку канала" }
     }
 
     override fun printLastChapter(maxChapter: Int) {

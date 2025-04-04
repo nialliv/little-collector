@@ -1,10 +1,10 @@
-package ru.artemev.littlecollector.service.interfaces
+package ru.artemev.littlecollector.service.printer
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 
-private val logger = KotlinLogging.logger {}
+private val logger = KotlinLogging.logger { }
 
-abstract class AbstractInterfaceServiceImpl : InterfaceService {
+abstract class AbstractDefaultPrinterService : PrinterService {
 
     companion object {
         private const val GREEN = "\u001b[32m"

@@ -1,14 +1,14 @@
-package ru.artemev.littlecollector.service.interfaces.impl
+package ru.artemev.littlecollector.service.printer.impl
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import ru.artemev.littlecollector.enums.ServicesEnum
-import ru.artemev.littlecollector.service.interfaces.AbstractInterfaceServiceImpl
+import ru.artemev.littlecollector.service.printer.AbstractDefaultPrinterService
 
 private val logger = KotlinLogging.logger {}
 
 @Service("beginInterfaceService")
-class BeginInterfaceServiceImpl : AbstractInterfaceServiceImpl() {
+class BeginPrinterService : AbstractDefaultPrinterService() {
 
     override fun printHello() {
         logger.info { "Привет, чего делать будем?" }

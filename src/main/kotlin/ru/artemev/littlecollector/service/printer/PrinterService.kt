@@ -1,6 +1,6 @@
-package ru.artemev.littlecollector.service.interfaces
+package ru.artemev.littlecollector.service.printer
 
-interface InterfaceService {
+interface PrinterService {
 
     fun printHello()
 

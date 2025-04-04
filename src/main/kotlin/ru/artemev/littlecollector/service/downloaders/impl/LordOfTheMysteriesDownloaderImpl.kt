@@ -12,10 +12,9 @@ import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
 import ru.artemev.littlecollector.dto.ChapterErrorDto
 import ru.artemev.littlecollector.dto.ChatExportDto
-import ru.artemev.littlecollector.enums.LordOfTheMysteriesAction
+import ru.artemev.littlecollector.enums.ServicesEnum
 import ru.artemev.littlecollector.service.downloaders.AbstractTelegraphDownloader
-import ru.artemev.littlecollector.service.downloaders.LordOfTheMysteriesDownloader
-import ru.artemev.littlecollector.service.interfaces.LordOfTheMysteriesInterfaceService
+import ru.artemev.littlecollector.service.printer.telegraph.LordOfTheMysteriesPrinter
 import ru.artemev.littlecollector.utils.Constants.YES
 
 import ru.artemev.littlecollector.utils.ValidatorHelper
@@ -23,9 +22,14 @@ import java.io.File
 
 @Service
 class LordOfTheMysteriesDownloaderImpl(
-    private val lordOfTheMysteriesInterfaceService: LordOfTheMysteriesInterfaceService,
-    @Qualifier("lotmWebClient") private val lotmRestClient: RestClient
-) : AbstractTelegraphDownloader(lordOfTheMysteriesInterfaceService), LordOfTheMysteriesDownloader {
+    private val lordOfTheMysteriesInterfaceService: LordOfTheMysteriesPrinter,
+    @Qualifier("lotmWebClient")
+    private val lotmRestClient: RestClient
+) : AbstractTelegraphDownloader(lordOfTheMysteriesInterfaceService) {
+
+    override fun isSupported(serviceEnum: ServicesEnum): Boolean {
+        return ServicesEnum.LORD_OF_THE_MYSTERIES == serviceEnum
+    }
 
     override fun process() {
         lordOfTheMysteriesInterfaceService.printHello()
