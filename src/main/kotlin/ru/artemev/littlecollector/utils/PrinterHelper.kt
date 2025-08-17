@@ -1,10 +1,12 @@
-package ru.artemev.littlecollector.service.printer
+package ru.artemev.littlecollector.utils
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.stereotype.Component
 
 private val logger = KotlinLogging.logger { }
 
-abstract class AbstractDefaultPrinterService : PrinterService {
+@Component
+class PrinterHelper {
 
     companion object {
         private const val GREEN = "\u001b[32m"
@@ -12,29 +14,25 @@ abstract class AbstractDefaultPrinterService : PrinterService {
         private const val RESET = "\u001B[0m"
     }
 
-    abstract override fun printHello()
-
-    abstract override fun printMenu()
-
-    override fun printOtherTry() {
+    fun printOtherTry() {
         logger.info { "Пробанем еще разок?" }
     }
 
-    override fun wrapperInput(): String {
+    fun wrapperInput(): String {
         print("[${GREEN}Input$RESET] -> ")
         return readln()
     }
 
-    override fun wrapperYesOrNot(): String {
+    fun wrapperYesOrNot(): String {
         print("[${GREEN}Y$RESET/${RED}n$RESET] - ")
         return readln()
     }
 
-    override fun wrongAction() {
+    fun wrongAction() {
         logger.warn { "Ты ввел ересь, давай по новой" }
     }
 
-    override fun error(exception: Exception) {
+    fun error(exception: Exception) {
         logger.error { "Дядя, у нас какая-то хрень случилась... Error - ${exception.message}" }
     }
 }

@@ -1,87 +1,73 @@
 package ru.artemev.littlecollector.service.downloaders.impl
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
-import org.springframework.web.client.RestClient
-import org.springframework.web.client.body
 import ru.artemev.littlecollector.dto.ChapterErrorDto
 import ru.artemev.littlecollector.dto.ChatExportDto
 import ru.artemev.littlecollector.enums.ServicesEnum
 import ru.artemev.littlecollector.enums.TelegraphActionsEnum
-import ru.artemev.littlecollector.service.downloaders.AbstractTelegraphDownloader
-import ru.artemev.littlecollector.service.printer.telegraph.ShadowSlavePrinter
+import ru.artemev.littlecollector.feign.TelegraphClient
 import ru.artemev.littlecollector.utils.Constants.YES
+import ru.artemev.littlecollector.utils.PrinterHelper
 import ru.artemev.littlecollector.utils.ValidatorHelper
 import java.io.File
+import java.net.URI
+
+private val logger = KotlinLogging.logger {}
 
 @Service
 class ShadowSlaveDownloaderImpl(
-    private val shadowSlaveInterfaceService: ShadowSlavePrinter,
-    @Qualifier("shadowSlaveWebClient")
-    private val shadowSlaveRestClient: RestClient
-) : AbstractTelegraphDownloader(shadowSlaveInterfaceService) {
+    private val printerHelper: PrinterHelper,
+    private val telegraphClient: TelegraphClient
+) {
 
-
-    override fun isSupported(serviceEnum: ServicesEnum): Boolean {
+    fun isSupported(serviceEnum: ServicesEnum): Boolean {
         return ServicesEnum.SHADOW_SLAVE == serviceEnum
     }
 
     //todo refactor to abstract class
-    override fun process() {
-        shadowSlaveInterfaceService.printHello()
-        shadowSlaveInterfaceService.printMenu()
-        handleActionCode(shadowSlaveInterfaceService.wrapperInput())
+    fun process() {
+        logger.info { "Получается качаем теневого раба..." }
+        logger.info {
+            "Что интересует?\n" +
+                    "\t1 - Какой диапазон глав в выгрузке?\n" +
+                    "\t2 - Давай качать главы"
+        }
+        handleActionCode(printerHelper.wrapperInput())
     }
 
     //todo refactor to abstract class
-    override fun handleActionCode(wrapperInput: String) {
+    fun handleActionCode(wrapperInput: String) {
         when (wrapperInput) {
-            TelegraphActionsEnum.LAST_CHAPTER.actionCode -> getNumberOfLastChapter()
-            TelegraphActionsEnum.SAVE_CHAPTERS.actionCode -> saveRangeChapters(null)
+            TelegraphActionsEnum.CHAPTER_RANGE.actionCode -> getNumberOfLastChapter()
+            TelegraphActionsEnum.SAVE_CHAPTERS.actionCode -> saveRangeChapters()
             else -> {
-                shadowSlaveInterfaceService.wrongAction()
-                handleActionCode(shadowSlaveInterfaceService.wrapperInput())
+                printerHelper.wrongAction()
+                handleActionCode(printerHelper.wrapperInput())
             }
         }
     }
 
-    override fun getNumberOfLastChapter() {
-        shadowSlaveInterfaceService.printInfoAboutCheckLasChapter()
+    fun getNumberOfLastChapter() {
+        logger.info { "Короче, чтоб посмотреть последнюю главу - скачай выгрузку канала" }
         val chatExport = getChatExport() ?: return
         val maxChapter = getMaxChapter(chatExport)
-        shadowSlaveInterfaceService.printLastChapter(maxChapter)
+        logger.info { "Итак последняя глава в выгрузке - $maxChapter" }
 
-        shadowSlaveInterfaceService.askAboutDownloadRange()
+        logger.info { "Зная, какая последняя глава, не хочешь сохранить немного глав? =)" }
         if (isYesInResponse()) {
             saveRangeChapters(chatExport)
         }
     }
 
-
-
-    /*
-        get info and what needed.
-        get path to json export file ++ validate.
-        get range to save ++ validate.
-        get target folder ++ validate.
-        --- try
-        download html.
-        parse.
-        save in doc(?).
-        ---- catch
-        if error save in array.
-
-        get status.
-    */
-    override fun saveRangeChapters(chatExport: ChatExportDto?) {
-        shadowSlaveInterfaceService.printInfoForDownloadShadowSlave()
+    fun saveRangeChapters(chatExport: ChatExportDto? = null) {
+        logger.info { "Чтоб скачать всякое - над предварительно выкачать с канала jsonExport" }
 
         val chapterMap = getChapters(chatExport ?: getChatExport() ?: return)
         val requiredChapters: Set<Int> = getRequireChapters(chapterMap) ?: return
@@ -90,41 +76,20 @@ class ShadowSlaveDownloaderImpl(
 
         val chapterWithErrors = HashSet<ChapterErrorDto>()
         requiredChapters.forEach {
-            shadowSlaveInterfaceService.printProcessChapter(it)
+            logger.info { "Приступаю к главе - $it" }
             processChapter(it, chapterMap, targetFolder, chapterWithErrors)
         }
 
-        shadowSlaveInterfaceService.printFinishStatus(chapterWithErrors)
-    }
-
-    private fun getTargetFolder(): String? {
-        try {
-            shadowSlaveInterfaceService.askTargetFolder()
-            val targetFolder = shadowSlaveInterfaceService.wrapperInput()
-            ValidatorHelper.validateTargetFolder(targetFolder)
-            return targetFolder
-        } catch (ex: Exception) {
-            if (isUserWantAgain(ex)) {
-                return getTargetFolder()
-            }
-            return null
+        if (chapterWithErrors.isEmpty()) {
+            logger.info { "Ну, мы закончили, и походу прошло все без ошибок =)" }
+            return
+        }
+        logger.info {
+            "Ну, мы закончили, и кажись где-то были ошибкасы, так что вот список глав с которыми были проблемы:\n" +
+                    chapterWithErrors.joinToString(",\n")
         }
     }
 
-    private fun getRequireChapters(chapterMap: Map<Int, String?>): Set<Int>? {
-        try {
-            shadowSlaveInterfaceService.askRangeChapters()
-            return shadowSlaveInterfaceService.wrapperInput()
-                .also { ValidatorHelper.validateRange(it) }
-                .let { convertRangeToSet(it) }
-                .also { ValidatorHelper.checkChapterExistsInExport(it, chapterMap) }
-        } catch (ex: Exception) {
-            if (isUserWantAgain(ex)) {
-                return getRequireChapters(chapterMap)
-            }
-            return null
-        }
-    }
 
     //todo refactor this
     private fun processChapter(
@@ -153,7 +118,7 @@ class ShadowSlaveDownloaderImpl(
             wordPackage.save(File("$targetFolder/Глава $chapterNum.docx"))
 
         } catch (ex: Exception) {
-            shadowSlaveInterfaceService.errorWithChapter(ex, chapterNum)
+            logger.error { "Проблемка с главой - $chapterNum. Ошибкас - ${ex.message}" }
             chapterWithErrors.add(ChapterErrorDto(chapterNum, ex.message ?: "Message is null =("))
         }
     }
@@ -165,12 +130,73 @@ class ShadowSlaveDownloaderImpl(
 
     private fun getFirstArticleByJsoup(it: String): Element = Jsoup.parse(it).body().getElementsByTag("article")[0]
 
+    private fun getMaxChapter(chatExport: ChatExportDto) = chatExport.messages
+        .asSequence()
+        .filter { it.type == "message" }
+        .flatMap { it.textEntities }
+        .filter { it.type == "text_link" }
+        .map { getChapter(it.text) }
+        .filter { it?.isNotBlank() ?: false }
+        .mapNotNull { it?.toInt() }
+        .toList()
+        .max()
+
+    private fun getChatExport(): ChatExportDto? {
+        logger.info { "Скинь путь до файла выгрузки" }
+        try {
+            return File(printerHelper.wrapperInput())
+                .also { answer -> ValidatorHelper.validateFilePath(answer) }
+                .let { getChatExportDto(it) }
+        } catch (ex: Exception) {
+            if (isUserWantAgain(ex)) {
+                return getChatExport()
+            }
+            return null
+        }
+    }
+
+    private fun isUserWantAgain(ex: Exception): Boolean {
+        printerHelper.error(ex)
+        printerHelper.printOtherTry()
+        return isYesInResponse()
+    }
+
+    private fun isYesInResponse(): Boolean {
+        val resp = printerHelper.wrapperYesOrNot()
+        return resp.equals(YES, true)
+    }
+
+    private fun getTargetFolder(): String? {
+        try {
+            logger.info { "В куда сохраняем выгруженные главы?" }
+            val targetFolder = printerHelper.wrapperInput()
+            ValidatorHelper.validateTargetFolder(targetFolder)
+            return targetFolder
+        } catch (ex: Exception) {
+            if (isUserWantAgain(ex)) {
+                return getTargetFolder()
+            }
+            return null
+        }
+    }
+
+    private fun getRequireChapters(chapterMap: Map<Int, String?>): Set<Int>? {
+        try {
+            logger.info { "Какой диапазон глав качаем? Пример: 1-200" }
+            return printerHelper.wrapperInput()
+                .also { ValidatorHelper.validateRange(it) }
+                .let { convertRangeToSet(it) }
+                .also { ValidatorHelper.checkChapterExistsInExport(it, chapterMap) }
+        } catch (ex: Exception) {
+            if (isUserWantAgain(ex)) {
+                return getRequireChapters(chapterMap)
+            }
+            return null
+        }
+    }
+
     private fun getHtmlPageResponse(href: String): String =
-        shadowSlaveRestClient.get()
-            .uri(href)
-            .accept(MediaType.TEXT_HTML)
-            .retrieve()
-            .body<String>()
+        telegraphClient.getHtml(URI(href))
             ?: throw RuntimeException("Cannot get html by href - $href")
 
 
@@ -193,7 +219,7 @@ class ShadowSlaveDownloaderImpl(
     }
 
     private fun getChapter(text: String): String? =
-        Regex("^.*?\\s(\\d*).*?\$").find(text.trim())?.groups?.get(1)?.value
+        Regex("^.*?\\s(\\d*).*?$").find(text.trim())?.groups?.get(1)?.value
 
     private fun convertRangeToSet(chaptersRange: String): Set<Int> {
         return chaptersRange.split("-")

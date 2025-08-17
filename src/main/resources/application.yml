@@ -2,6 +2,10 @@ spring:
   application:
     name: little-collector
 
+  cloud:
+    loadbalancer:
+      enabled: false
+
 logging:
   pattern:
     console: "[%highlight(%level)] - %msg%n"
@@ -10,4 +14,5 @@ logging:
     ru.artemev.littlecollector.LittleCollectorApplicationKt: WARN
     org.docx4j: ERROR
     org.apache: ERROR
-    org.springframework.boot: ERROR
+    org.springframework: ERROR
+

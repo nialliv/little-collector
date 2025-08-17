@@ -6,6 +6,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
 
 }
+val springCloudVersion by extra("2024.0.2")
 
 group = "ru.artemev"
 version = "0.0.1"
@@ -29,6 +30,8 @@ dependencies {
     implementation("org.jsoup:jsoup:1.19.1")
     implementation("org.docx4j:docx4j-core:11.5.2")
     implementation("org.docx4j:docx4j-JAXB-ReferenceImpl:11.5.2")
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+    implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
 //    implementation("org.glassfish.jaxb:jaxb-runtime:4.0.5")
 //    implementation("jakarta.xml.bind:jakarta.xml.bind-api:4.0.2")
 
@@ -37,5 +40,10 @@ dependencies {
 kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict")
+    }
+}
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion")
     }
 }
