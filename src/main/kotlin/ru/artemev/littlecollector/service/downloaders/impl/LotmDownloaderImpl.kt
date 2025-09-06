@@ -6,12 +6,12 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage
 import org.jsoup.Jsoup
-import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import ru.artemev.littlecollector.dto.ChapterErrorDto
 import ru.artemev.littlecollector.dto.ChatExportDto
 import ru.artemev.littlecollector.enums.ServicesEnum
 import ru.artemev.littlecollector.feign.TelegraphClient
+import ru.artemev.littlecollector.service.downloaders.AbstractTelegraphDownloader
 import ru.artemev.littlecollector.utils.Constants.YES
 import ru.artemev.littlecollector.utils.PrinterHelper
 import ru.artemev.littlecollector.utils.ValidatorHelper
@@ -24,72 +24,41 @@ private val logger = KotlinLogging.logger {}
 class LotmDownloaderImpl(
     private val printerHelper: PrinterHelper,
     private val telegraphClient: TelegraphClient
-) {
-
-    fun isSupported(serviceEnum: ServicesEnum): Boolean {
+) : AbstractTelegraphDownloader(printerHelper) {
+    override fun isSupported(serviceEnum: ServicesEnum): Boolean {
         return ServicesEnum.LORD_OF_THE_MYSTERIES == serviceEnum
     }
 
-    fun process() {
-        logger.info { "Получается качаем повелителя тайн." }
-        logger.info {
-            "Что интересует?\n" +
-                    "\t1 - Давай качать главы"
-        }
-        handleActionCode(printerHelper.wrapperInput())
+    override fun getDownloaderName(): String = "Lord of the mysteries"
+
+    override fun getRangeChapters(chatExport: ChatExportDto): List<Int> {
+        TODO("Not yet implemented")
     }
 
-    fun handleActionCode(wrapperInput: String) {
-        when (wrapperInput) {
-            "1" -> saveRangeChapters()
-            else -> {
-                printerHelper.wrongAction()
-                handleActionCode(printerHelper.wrapperInput())
-            }
-        }
-    }
-
-    private fun saveRangeChapters() {
-        logger.info { "Чтоб скачать всякое - над предварительно выкачать с канала jsonExport" }
-
-        val chatExport = getChatExport() ?: return
-        val mapChapterToHref = chatExport.messages
-            .asSequence()
+    override fun getChaptersWithHrefs(chatExport: ChatExportDto): Map<Int, String?> =
+        chatExport.messages
             .filter { it.type == "message" }
-            .filter { message ->
-                message.textEntities
-                    .any { it.text.contains("повелитель", true) }
-            }
             .flatMap { it.textEntities }
-            .filter { it.type == "text_link" }
+            .filter { it.type == "text_link" && it.text.contains("повелитель", true) }
             .filter { !it.text.startsWith("В наши дни") }
             .associateBy({ Regex("^Глава\\s(\\d*).*").find(it.text.trim())?.groups?.get(1)?.value }, { it.href })
             .filterKeys { !it.isNullOrBlank() }
+            .mapKeys { it.key?.toInt() ?: 0 }
 
-        val targetFolder = getTargetFolder() ?: return
-
-        val chapterWithErrors = HashSet<ChapterErrorDto>()
-
-        mapChapterToHref.forEach { chapterNum ->
-            logger.info { "Приступаю к главе - $chapterNum" }
-            processChapter(chapterNum, targetFolder, chapterWithErrors)
-        }
-
-        if (chapterWithErrors.isEmpty()) {
-            logger.info { "Ну, мы закончили, и походу прошло все без ошибок =)" }
-            return
-        }
-        logger.info {
-            "Ну, мы закончили, и кажись где-то были ошибкасы, так что вот список глав с которыми были проблемы:\n" +
-                    chapterWithErrors.joinToString(",\n")
-        }
+    override fun processChapter(
+        chapterNum: Int,
+        chapterMap: Map<Int, String?>,
+        targetFolder: String,
+        chapterWithErrors: HashSet<ChapterErrorDto>
+    ) {
+        TODO("Not yet implemented")
     }
 
     // todo go to other service
     private fun processChapter(
         chapterToHref: Map.Entry<String?, String?>,
         targetFolder: String,
-        chapterWithErrors: java.util.HashSet<ChapterErrorDto>
+        chapterWithErrors: HashSet<ChapterErrorDto>
     ) {
         try {
             // always must be one element, but... mb not? =)

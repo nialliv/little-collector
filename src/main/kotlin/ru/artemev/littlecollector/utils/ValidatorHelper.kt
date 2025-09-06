@@ -15,7 +15,8 @@ object ValidatorHelper {
             throw IllegalArgumentException("Range is invalid")
         }
 
-        val splitText = text.split("-")
+        val splitText = text.split("-").map { it.toInt() }
+
         if (splitText[0] > splitText[1]) {
             throw IllegalArgumentException("First greater then second")
         }
